@@ -2,7 +2,6 @@ import { Injectable } from '@nestjs/common';
 import * as cheerio from 'cheerio';
 import got from 'got';
 import * as fs from "fs";
-import * as summarize from "text-summarization";
 
 import { ICrawlerSetting, IDetailSetting, IJdInfo } from './crawler.model';
 
@@ -18,7 +17,7 @@ export class CrawlerService {
             siteName: 'jobsdb',
             host: 'https://sg.jobsdb.com',
             search: {
-                url: 'https://sg.jobsdb.com/j?jt=3&l=Singapore&q=senior+front+end+developer&sp=facet_job_type',
+                url: 'https://sg.jobsdb.com/j?a=24h&jt=3&l=Singapore&q=front+end+developer&sp=facet_listed_date',
                 linkSelector: '#jobresults .job-container a',
                 resultPageCountSelector: '.search-results-count > strong:last',
             },
@@ -26,7 +25,7 @@ export class CrawlerService {
                 title: '.job-view-content h3.job-title',
                 location: '#company-location-container .location',
                 company: '#company-location-container .company',
-                salary: '#job-info-container .salary span',
+                salary: '#job-info-container > div:nth-child(3) > div',
                 description: '#job-description-container',
                 infoSource: '#job-meta .site',
                 postDate: '#job-meta .listed-date',
@@ -41,8 +40,8 @@ export class CrawlerService {
             // go to first page and get totalPageCount
             const response = await got(setting.search.url);
             const $ = cheerio.load(response.body);
-            // const totalPageCount: number = parseInt($(setting.search.resultPageCountSelector).text());
-            const totalPageCount: number = 1;
+            const totalPageCount: number = parseInt($(setting.search.resultPageCountSelector).text());
+            // const totalPageCount: number = 1;
             // get search results' href list
             for (let page = 1; page <= totalPageCount; page++) {
                 // Each Page's URL
@@ -101,7 +100,7 @@ export class CrawlerService {
                 title: $(detailSetting.title).text(),
                 location: $(detailSetting.location).text(),
                 company: $(detailSetting.company).text(),
-                salary: $(detailSetting.salary).text(),
+                salary: $(detailSetting.salary).text().includes('$') ? $(detailSetting.salary).text() : '',
                 description: $(detailSetting.description).text().replace(/\n/g, ' '),
                 infoSource: $(detailSetting.infoSource).text(),
                 postDate: $(detailSetting.postDate).text(),
