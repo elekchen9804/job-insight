@@ -40,8 +40,8 @@ export class CrawlerService {
             // go to first page and get totalPageCount
             const response = await got(setting.search.url);
             const $ = cheerio.load(response.body);
-            const totalPageCount: number = parseInt($(setting.search.resultPageCountSelector).text());
-            // const totalPageCount: number = 1;
+            // const totalPageCount: number = parseInt($(setting.search.resultPageCountSelector).text());
+            const totalPageCount: number = 1;
             // get search results' href list
             for (let page = 1; page <= totalPageCount; page++) {
                 // Each Page's URL
@@ -94,6 +94,7 @@ export class CrawlerService {
         try {
             const response = await got(link);
             const $ = cheerio.load(response.body);
+            const descriptionConent = $(detailSetting.description).text().replace(/\n/g, '') || '';
 
             detail = {
                 link: link,
@@ -101,10 +102,11 @@ export class CrawlerService {
                 location: $(detailSetting.location).text(),
                 company: $(detailSetting.company).text(),
                 salary: $(detailSetting.salary).text().includes('$') ? $(detailSetting.salary).text() : '',
-                description: $(detailSetting.description).text().replace(/\n/g, ' '),
+                description: descriptionConent,
                 infoSource: $(detailSetting.infoSource).text(),
                 postDate: $(detailSetting.postDate).text(),
                 crawlerCreateDate: Date.now() + '',
+                description_keywords: await this.descriptionExtractor(descriptionConent),
             };
 
             return detail;
@@ -114,12 +116,31 @@ export class CrawlerService {
         }
     }
     /** Extract description */
-    private descriptionExtractor(rawData: string) {
+    private async descriptionExtractor(rawData: string): Promise<string[]> {
         // Output
         // - 已知技術的比重
         // - 探索出現哪些詞彙
         // - Responsibilities 摘要
         // - Requirement 摘要
+        let stringList: string[];
+        let visitedItem = {};
+
+        try {
+            stringList = rawData.split('. ');
+            // stringList = rawData.split('.').filter((v) => {
+            //     if (visitedItem[v]) {
+            //         return false;
+            //     }
+            //     // add to 
+            //     visitedItem[v] = true;
+            //     return true;
+            // });
+            return stringList;
+        } catch (error) {
+            console.log(error);
+            return null;
+        }
+
     }
 
     /** Transfer */

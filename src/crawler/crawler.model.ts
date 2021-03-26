@@ -5,6 +5,7 @@ export interface IJdInfo {
     company: string;
     salary: string;
     description: string;
+    description_keywords: string[];
     infoSource: string;
     postDate: string;
     crawlerCreateDate: string;
